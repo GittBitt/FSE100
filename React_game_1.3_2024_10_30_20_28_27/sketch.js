@@ -11,7 +11,7 @@ function setup() {
   showMenu();
 }
 
-//The whole game picture, with numbers to click and timeer display.
+//The whole game picture, with numbers to click and a timer display.
 function draw() {
   if (!inMenu) {
     background(255);
@@ -28,6 +28,7 @@ function draw() {
       textSize(32);
       text(`Level: ${level}`, 70, 30);
       let currentTime = startTime - millis();
+      currentTime = max(currentTime, 0);
       text(`Timer: ${(currentTime / 1000).toFixed(2)}s`, 100, 70);
 
       if (startTime == 0) {
@@ -49,7 +50,7 @@ function showMenu() {
   fill(220, 250, 50);
   textSize(120);
   textAlign(CENTER, CENTER);
-  text('Numbers', width / 2, height / 2 - 160);
+  text('Reacting Game', width / 2, height / 2 - 160);
   
   fill(70, 250, 150);
   textSize(40);
@@ -70,7 +71,7 @@ function quitGame() {
   textSize(50);
   textAlign(CENTER, CENTER);
   fill(0);
-  text('Goodbye!', width / 2, height / 2);
+  text('', width / 2, height / 2);
 }
 
 function mousePressed() {
