@@ -16,36 +16,40 @@ function setup() {
   createCanvas(windowWidth - 20, windowHeight - 20);
   initializeButtons(); // Create the buttons on setup
   setupMemoryGame(); // Set up the memory game
+  //setupSortingGame();
+  //setupReactionGame();
 }
 
 function draw() {
   background(100);
 
-  if (scene === "title") {
+  if (scene == "title") {
     drawTitleScreen();
-  } else if (scene === "memory") {
+  } else if (scene == "memory") {
     drawMemoryGame();
     drawGameButtons();
-  } else if (scene === "sorting") {
+  } else if (scene == "sorting") {
     drawSortingGame();
     drawGameButtons();
-  } else if (scene === "reaction") {
+  } else if (scene == "reaction") {
     drawReactionGame();
     drawGameButtons();
   }
 }
 
 function drawTitleScreen() {
+  var dokyo = loadFont("DOKYO.TTF");
   background(100);
   fill(255);
-  textSize(50);
+  textSize(70);
   textAlign(CENTER, CENTER);
+  textFont(dokyo);
   text("Fine Motor Master", width / 2, height / 2 - 50);
   textSize(20);
   text("Select a game", width / 2, height / 2 + 5);
 
   // Draw buttons for the title screen
-  let buttonX = (width - (buttons.length - 1) * 150) / 2; // Center the buttons horizontally
+  let buttonX = (width - (buttons.length - 1) * 175) / 2; // Center the buttons horizontally
   let buttonY = height / 1.75;
   for (let i = 0; i < buttons.length; i++) {
     buttons[i].position(buttonX + i * 150, buttonY);
@@ -73,7 +77,7 @@ function createGameButton(label, onClick) {
 
 function drawGameButtons() {
   // Position game buttons at the bottom of the canvas, excluding "Quit"
-  let buttonX = (width - (buttons.length - 1) * 150) / 2;
+  let buttonX = (width - (buttons.length - 1) * 175) / 2;
   let buttonY = height - 100;
   for (let i = 0; i < buttons.length - 1; i++) {
     buttons[i].position(buttonX + i * 150, buttonY);
@@ -257,84 +261,4 @@ class Card {
 
 // Sorting Game Specific Functions
 
-
 // Reaction Game Specific Functions
-function drawReactionGame(){
-  let level = 1;
-  let squares = [];
-  let startTime, bestTime;
-  let clicked = 0;
-  let gameComplete = false;
-  let totalTime;
-  mousePressed();
-  resetGame();
-  
-  background(255, 191, 0);
-    if (!gameComplete) {
-    for (let shape of squares) {
-      fill(shape.col);
-      ellipse(shape.x, shape.y, 50, 50);
-      fill(0);
-      textAlign(CENTER, CENTER);
-      text(shape.num, shape.x, shape.y);
-    }
-
-    fill(0);
-    textSize(32);
-    text(`Level: ${level}`, 70, 30);
-    let currentTime = startTime - millis();
-    currentTime = max(currentTime, 0);
-    text(`Timer: ${(currentTime / 1000).toFixed(2)}s`, 100, 70);
-
-    if (currentTime == 0) {
-      textSize(75);
-      text('Time Up!', width / 2, height / 2);
-      noLoop();
-    }
-  } else {
-    textSize(50);
-    text('Complete!', width /2, height / 2);
-    textSize(32);
-    text(`Time Left: ${(totalTime / 1000).toFixed(2)}s`, width / 2, height / 2 - 35);
-  }
-}
-
-//Reaction Game Specifics 
-function setupReactionGame(){
-  mousePressed();
-  function mousePressed() {
-  if (!gameComplete) {
-    for (let i = squares.length - 1; i >= 0; i--) {
-      let d = dist(mouseX, mouseY, squares[i].x, squares[i].y);
-      if (d < 25 && squares[i].num == clicked + 1) {
-        clicked++;
-        squares.splice(i, 1);
-        if (clicked == level * (level == 1 ? 5 : level == 2 ? 7 : 12)) {
-          totalTime = millis() - startTime;
-          if (!bestTime || totalTime < bestTime) {
-            bestTime = totalTime;
-          }
-          gameComplete = true;
-        }
-        break;
-      }
-    }
-  }
-  }
-
-function resetGame() {
-  squares = [];
-  for (let i = 1; i <= (level == 1 ? 5 : level == 2 ? 7 : 12); i++) {
-    squares.push({
-      x: random(50, width - 50),
-      y: random(50, height - 50),
-      col: color(random(255), random(255, random(100))),
-      num: i
-    });
-  }
-  clicked = 0;
-  startTime = 20000;
-  gameComplete = false;
-  loop();
- }
-}
