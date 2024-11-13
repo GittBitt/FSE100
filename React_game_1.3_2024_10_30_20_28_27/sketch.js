@@ -1,9 +1,10 @@
 let level = 1;
-let circles = [];
+let squares = [];
 let startTime, bestTime;
 let clicked = 0;
 let gameComplete = false;
 let totalTime;
+let resultTime;
 
 function setup() {
   createCanvas(800, 600);
@@ -13,12 +14,12 @@ function setup() {
 function draw() {
   background(255);
   if (!gameComplete) {
-    for (let circle of circles) {
-      fill(circle.col);
-      ellipse(circle.x, circle.y, 50, 50);
+    for (let shape of squares) {
+      fill(shape.col);
+      ellipse(shape.x, shape.y, 50, 50);
       fill(0);
       textAlign(CENTER, CENTER);
-      text(circle.num, circle.x, circle.y);
+      text(shape.num, shape.x, shape.y);
     }
 
     fill(0);
@@ -34,20 +35,23 @@ function draw() {
       noLoop();
     }
   } else {
+    textSize(50);
+    text('Complete!', width /2, height / 2);
     textSize(32);
-    text(`Time Left: ${(totalTime / 1000).toFixed(2)}s`, width / 2, height / 2 - 35);
+    text(`Time taken: ${(resultTime / 1000).toFixed(2)}s`, width / 2, height / 2 - 35);
   }
 }
 
 function mousePressed() {
   if (!gameComplete) {
-    for (let i = circles.length - 1; i >= 0; i--) {
-      let d = dist(mouseX, mouseY, circles[i].x, circles[i].y);
-      if (d < 25 && circles[i].num == clicked + 1) {
+    for (let i = squares.length - 1; i >= 0; i--) {
+      let d = dist(mouseX, mouseY, squares[i].x, squares[i].y);
+      if (d < 25 && squares[i].num == clicked + 1) {
         clicked++;
-        circles.splice(i, 1);
+        squares.splice(i, 1);
         if (clicked == level * (level == 1 ? 5 : level == 2 ? 7 : 12)) {
           totalTime = millis() - startTime;
+          resultTime =+ millis();
           if (!bestTime || totalTime < bestTime) {
             bestTime = totalTime;
           }
@@ -60,12 +64,12 @@ function mousePressed() {
 }
 
 function resetGame() {
-  circles = [];
+  squares = [];
   for (let i = 1; i <= (level == 1 ? 5 : level == 2 ? 7 : 12); i++) {
-    circles.push({
+    squares.push({
       x: random(50, width - 50),
       y: random(50, height - 50),
-      col: color(random(255), random(255, random(255))),
+      col: color(random(255), random(255, random(100))),
       num: i
     });
   }
