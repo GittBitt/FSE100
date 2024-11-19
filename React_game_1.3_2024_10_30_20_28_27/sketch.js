@@ -13,8 +13,8 @@ function setup() {
 
 function draw() {
   background(255);
-  if (!gameComplete) {
-    for (let shape of squares) {
+  if (!gameComplete) { //if gameComplete is false
+    for (var shape of squares) { 
       fill(shape.col);
       ellipse(shape.x, shape.y, 50, 50);
       fill(0);
@@ -25,11 +25,11 @@ function draw() {
     fill(0);
     textSize(32);
     text(`Level: ${level}`, 70, 30);
-    let currentTime = startTime - millis();
-    currentTime = max(currentTime, 0);
-    text(`Timer: ${(currentTime / 1000).toFixed(2)}s`, 100, 70);
+    var currentTime = startTime - millis();
+    timer = max(currentTime, 0);
+    text(`Timer: ${(timer / 1000).toFixed(0)} seconds left`, 160, 70);
 
-    if (currentTime == 0) {
+    if (timer == 0) {
       textSize(75);
       text('Time Up!', width / 2, height / 2);
       noLoop();
@@ -38,18 +38,18 @@ function draw() {
     textSize(50);
     text('Complete!', width /2, height / 2);
     textSize(32);
-    text(`Time taken: ${(resultTime / 1000).toFixed(2)}s`, width / 2, height / 2 - 35);
+    text(`Time taken: ${(resultTime / 1000).toFixed(0)} seconds`, width / 2, height / 2 - 35);
   }
 }
 
-function mousePressed() {
-  if (!gameComplete) {
-    for (let i = squares.length - 1; i >= 0; i--) {
-      let d = dist(mouseX, mouseY, squares[i].x, squares[i].y);
+function mousePressed() { // Button and click funtions
+  if (!gameComplete) { // if game is false
+    for (let i = squares.length - 1; i >= 0; i--) { 
+      var d = dist(mouseX, mouseY, squares[i].x, squares[i].y);
       if (d < 25 && squares[i].num == clicked + 1) {
         clicked++;
-        squares.splice(i, 1);
-        if (clicked == level * (level == 1 ? 5 : level == 2 ? 7 : 12)) {
+        squares.splice(i, 1); // removing the numbers when clicked
+        if (clicked == level * (level == 1 ? 5 : level == 2 ? 7 : 12)) { // check what level is it on, then the numbers to click will increase
           totalTime = millis() - startTime;
           resultTime =+ millis();
           if (!bestTime || totalTime < bestTime) {
@@ -63,7 +63,7 @@ function mousePressed() {
   }
 }
 
-function resetGame() {
+function resetGame() { //Resets the buttons and randomize the button numbers, resets timer as well
   squares = [];
   for (let i = 1; i <= (level == 1 ? 5 : level == 2 ? 7 : 12); i++) {
     squares.push({
