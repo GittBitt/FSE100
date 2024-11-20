@@ -12,11 +12,25 @@ let isProcessing = false;
 let revealDuration = 2000;
 let revealedAtStart = true;
 
+// Sorting Game Variables
+let shapes = [];
+let holes = [];
+let selectedShape = null;
+
+// Reaction Game Variables
+let level = 1;
+let squares = [];
+let startTime, bestTime;
+let clicked = 0;
+let gameComplete = false;
+let totalTime;
+let resultTime;
+
 function setup() {
   createCanvas(windowWidth - 20, windowHeight - 20);
   initializeButtons(); // Create the buttons on setup
   setupMemoryGame(); // Set up the memory game
-  //setupSortingGame();
+  setupSortingGame();
   //setupReactionGame();
 }
 
@@ -37,7 +51,19 @@ function draw() {
   }
 }
 
+// Mouse Interaction
+function mousePressed() {
+  if (scene === "memory") {
+    handleMemoryMousePress();
+  } else if (scene === "sorting") {
+    handleSortingMousePress();
+  } else if (scene === "reaction") {
+    handleReactionMousePress();
+  }
+}
+
 function drawTitleScreen() {
+  resetGame();
   var dokyo = loadFont("DOKYO.TTF");
   background(100);
   fill(255);
@@ -107,7 +133,8 @@ function drawMemoryGame() {
     strokeWeight(3);
     textAlign(CENTER, CENTER);
     text("🎉 You Won! 🎉", width / 2, height / 2);
-    noLoop();
+    //Add score display here
+    //noLoop();
   }
 }
 
@@ -117,7 +144,25 @@ function drawSortingGame() {
   fill(255);
   textSize(40);
   textAlign(CENTER, CENTER);
-  text("Sorting Game", width / 2, height / 2);
+  text("Sorting Game", width / 2, 30);
+  
+    // Draw holes
+  for (let hole of holes) {
+    hole.show();
+  }
+  
+  // Draw shapes
+  for (let shape of shapes) {
+    shape.show();
+  }
+
+  // Highlight selected shape
+  if (selectedShape) {
+    stroke(0);
+    strokeWeight(4);
+    noFill();
+    ellipse(selectedShape.x, selectedShape.y, 60, 60);
+  }
 }
 
 function drawReactionGame() {
@@ -126,7 +171,36 @@ function drawReactionGame() {
   fill(255);
   textSize(40);
   textAlign(CENTER, CENTER);
-  text("Reaction Game", width / 2, height / 2);
+  text("Reaction Game", width / 2, 30);
+  
+  //Stevie Part
+    if (!gameComplete) { //if gameComplete is false
+    for (var shape of squares) { 
+      fill(shape.col);
+      ellipse(shape.x, shape.y, 50, 50);
+      fill(0);
+      textAlign(CENTER, CENTER);
+      text(shape.num, shape.x, shape.y);
+    }
+
+    fill(0);
+    textSize(32);
+    text(`Level: ${level}`, 70, 30);
+    var currentTime = startTime - millis();
+    timer = max(currentTime, 0);
+    text(`Timer: ${(timer / 1000).toFixed(0)} seconds left`, 190, 70);
+
+    if (timer == 0) {
+      textSize(75);
+      text('Time Up!', width / 2, height / 2);
+      //noLoop();
+    }
+  } else {
+    textSize(50);
+    text('Complete!', width /2, height / 2);
+    textSize(32);
+    text(`Time taken: ${(resultTime / 1000).toFixed(0)} seconds`, width / 2, height / 2 - 35);
+  }
 }
 
 // Memory Game Specific Functions
@@ -184,7 +258,7 @@ function displayCards() {
   }
 }
 
-function mousePressed() {
+/*function mousePressed() {
   if (isProcessing || revealedAtStart) return;
 
   let xOffset = (width - cols * cardSize) / 2;
@@ -203,7 +277,7 @@ function mousePressed() {
       break;
     }
   }
-}
+}*/
 
 function checkMatch() {
   let [card1, card2] = flippedCards;
@@ -260,5 +334,241 @@ class Card {
 }
 
 // Sorting Game Specific Functions
+function setupSortingGame() {
+    // Create holes
+  holes.push(new Hole(150, 150, 'circle'));
+  holes.push(new Hole(250, 150, 'star'));
+  holes.push(new Hole(350, 150, 'square'));
+  holes.push(new Hole(450, 150, 'trapezoid'));
+  holes.push(new Hole(550, 150, 'triangle'));
+  
+  // Create shapes
+  shapes.push(new Shape(150, 400, 'circle', color(255, 0, 0)));  // Red circle
+  shapes.push(new Shape(250, 400, 'star', color(255, 255, 0))); // Yellow star
+  shapes.push(new Shape(350, 400, 'square', color(0, 255, 0)));  // Green square
+  shapes.push(new Shape(450, 400, 'trapezoid', color(255, 105, 180))); // Pink trapezoid
+  shapes.push(new Shape(550, 400, 'triangle', color(0, 0, 255))); // Blue triangle
+}
+
+function mouseReleased() {
+  if (scene === "sorting") {
+    handleSortingMouseRelease();
+  }
+}
+
+function handleMemoryMousePress() {
+  if (isProcessing || revealedAtStart) return;
+
+  let xOffset = (width - cols * cardSize) / 2;
+  let yOffset = 50;
+
+  for (let card of cards) {
+    if (card.isFlipped || card.isMatched) continue;
+
+    if (card.contains(mouseX - xOffset, mouseY - yOffset)) {
+      card.flip();
+      flippedCards.push(card);
+
+      if (flippedCards.length === 2) {
+        checkMatch();
+      }
+      break;
+    }
+  }
+}
+
+function handleSortingMousePress() {
+  for (let shape of shapes) {
+    if (shape.isInside(mouseX, mouseY)) {
+      selectedShape = shape;
+      offsetX = mouseX - shape.x;
+      offsetY = mouseY - shape.y;
+      break;
+    }
+  }
+}
+
+function handleSortingMouseRelease() {
+  if (selectedShape) {
+    for (let hole of holes) {
+      if (hole.isInside(mouseX, mouseY) && selectedShape.type === hole.type) {
+        selectedShape.x = hole.x;
+        selectedShape.y = hole.y;
+        break;
+      }
+    }
+    selectedShape = null;
+  }
+}
+// Shape class
+class Shape {
+  constructor(x, y, type, c) {
+    this.x = x;
+    this.y = y;
+    this.type = type;
+    this.color = c;
+  }
+
+  show() {
+    fill(this.color);
+    noStroke();
+    if (this.type === 'circle') {
+      ellipse(this.x, this.y, 60, 60);
+    } else if (this.type === 'square') {
+      rect(this.x - 30, this.y - 30, 60, 60);
+    } else if (this.type === 'triangle') {
+      triangle(this.x, this.y - 30, this.x - 30, this.y + 30, this.x + 30, this.y + 30);
+    } else if (this.type === 'star') {
+      this.drawStar(this.x, this.y, 30, 15, 5);
+    } else if (this.type === 'trapezoid') {
+      this.drawTrapezoid(this.x, this.y, 60, 40);
+    }
+  }
+
+  isInside(px, py) {
+    if (this.type === 'circle') {
+      return dist(px, py, this.x, this.y) < 30;
+    } else if (this.type === 'square') {
+      return px > this.x - 30 && px < this.x + 30 && py > this.y - 30 && py < this.y + 30;
+    } else if (this.type === 'triangle') {
+      return (px > this.x - 30 && px < this.x + 30 && py > this.y - 30 && py < this.y + 30);
+    } else if (this.type === 'star') {
+      return dist(px, py, this.x, this.y) < 30; // Simplified for click detection
+    } else if (this.type === 'trapezoid') {
+      return (px > this.x - 30 && px < this.x + 30 && py > this.y - 20 && py < this.y + 20); // Simplified bounding box
+    }
+    return false;
+  }
+
+  drawStar(x, y, radius1, radius2, npoints) {
+    let angle = TWO_PI / npoints;
+    let halfAngle = angle / 2.0;
+    beginShape();
+    for (let a = 0; a < TWO_PI; a += angle) {
+      let sx = x + cos(a) * radius2;
+      let sy = y + sin(a) * radius2;
+      vertex(sx, sy);
+      sx = x + cos(a + halfAngle) * radius1;
+      sy = y + sin(a + halfAngle) * radius1;
+      vertex(sx, sy);
+    }
+    endShape(CLOSE);
+  }
+
+  drawTrapezoid(x, y, width, height) {
+    fill(this.color);
+    noStroke();
+    beginShape();
+    vertex(x - width / 2, y + height / 2); // Bottom left
+    vertex(x + width / 2, y + height / 2); // Bottom right
+    vertex(x + width / 4, y - height / 2); // Top right
+    vertex(x - width / 4, y - height / 2); // Top left
+    endShape(CLOSE);
+  }
+}
+
+// Hole class
+class Hole {
+  constructor(x, y, type) {
+    this.x = x;
+    this.y = y;
+    this.type = type;
+  }
+
+  show() {
+    noFill();
+    stroke(0);
+    strokeWeight(2);
+    if (this.type === 'circle') {
+      ellipse(this.x, this.y, 60, 60);
+    } else if (this.type === 'square') {
+      rect(this.x - 30, this.y - 30, 60, 60);
+    } else if (this.type === 'triangle') {
+      triangle(this.x, this.y - 30, this.x - 30, this.y + 30, this.x + 30, this.y + 30);
+    } else if (this.type === 'star') {
+      this.drawStar(this.x, this.y, 30, 15, 5);
+    } else if (this.type === 'trapezoid') {
+      this.drawTrapezoid(this.x, this.y, 60, 40);
+    }
+  }
+
+  isInside(px, py) {
+    if (this.type === 'circle') {
+      return dist(px, py, this.x, this.y) < 30;
+    } else if (this.type === 'square') {
+      return px > this.x - 30 && px < this.x + 30 && py > this.y - 30 && py < this.y + 30;
+    } else if (this.type === 'triangle') {
+      return (px > this.x - 30 && px < this.x + 30 && py > this.y - 30 && py < this.y + 30);
+    } else if (this.type === 'star') {
+      return dist(px, py, this.x, this.y) < 30; // Simplified for click detection
+    } else if (this.type === 'trapezoid') {
+      return (px > this.x - 30 && px < this.x + 30 && py > this.y - 20 && py < this.y + 20); // Simplified bounding box
+    }
+    return false;
+  }
+
+  drawStar(x, y, radius1, radius2, npoints) {
+    let angle = TWO_PI / npoints;
+    let halfAngle = angle / 2.0;
+    beginShape();
+    for (let a = 0; a < TWO_PI; a += angle) {
+      let sx = x + cos(a) * radius2;
+      let sy = y + sin(a) * radius2;
+      vertex(sx, sy);
+      sx = x + cos(a + halfAngle) * radius1;
+      sy = y + sin(a + halfAngle) * radius1;
+      vertex(sx, sy);
+    }
+    endShape(CLOSE);
+  }
+
+  drawTrapezoid(x, y, width, height) {
+    noFill();
+    stroke(0);
+    strokeWeight(2);
+    beginShape();
+    vertex(x - width / 2, y + height / 2); // Bottom left
+    vertex(x + width / 2, y + height / 2); // Bottom right
+    vertex(x + width / 4, y - height / 2); // Top right
+    vertex(x - width / 4, y - height / 2); // Top left
+    endShape(CLOSE);
+  }
+}
 
 // Reaction Game Specific Functions
+function handleReactionMousePress() { // Button and click funtions
+  if (!gameComplete) { // if game is false
+    for (let i = squares.length - 1; i >= 0; i--) { 
+      var d = dist(mouseX, mouseY, squares[i].x, squares[i].y);
+      if (d < 25 && squares[i].num == clicked + 1) {
+        clicked++;
+        squares.splice(i, 1); // removing the numbers when clicked
+        if (clicked == level * (level == 1 ? 5 : level == 2 ? 7 : 12)) { // check what level is it on, then the numbers to click will increase
+          totalTime = millis() - startTime;
+          resultTime =+ millis();
+          if (!bestTime || totalTime < bestTime) {
+            bestTime = totalTime;
+          }
+          gameComplete = true;
+        }
+        break;
+      }
+    }
+  }
+}
+
+function resetGame() { //Resets the buttons and randomize the button numbers, resets timer as well
+  squares = [];
+  for (let i = 1; i <= (level == 1 ? 5 : level == 2 ? 7 : 12); i++) {
+    squares.push({
+      x: random(50, width - 50),
+      y: random(50, height - 50),
+      col: color(random(255), random(255, random(100))),
+      num: i
+    });
+  }
+  clicked = 0;
+  startTime = 20000;
+  gameComplete = false;
+  loop();
+}
